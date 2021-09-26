@@ -14,12 +14,12 @@ from efficientnet_pytorch import EfficientNet
 
 data_transforms = {
     'train': transforms.Compose([
-        transforms.Resize((64,64)),
+        transforms.Resize((256,256)),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ]),
     'val': transforms.Compose([
-        transforms.Resize((64,64)),
+        transforms.Resize((256,256)),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ]),
@@ -30,11 +30,11 @@ data_transforms = {
 data loader from the AIDER dataset 
 '''
 
-data_dir = '/home/shubham/Projects/dataset-hackzurich/AIDER/'
+data_dir = '/home/shubham/Projects/dataset-hackzurich/AIDER'
 image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x),
                                           data_transforms[x])
                   for x in ['train', 'val']}
-dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=64,
+dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=16,
                                              shuffle=True, num_workers=2)
               for x in ['train', 'val']}
 dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
@@ -117,12 +117,12 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
     model.load_state_dict(best_model_wts)
     return model
 
-model = EfficientNet.from_name('efficientnet-b0')
+model = EfficientNet.from_name('efficientnet-b3')
 print(model)
 
 
 num_ftrs = model._fc.in_features
-model._fc = nn.Linear(num_ftrs, 5)
+model._fc = nn.Linear(num_ftrs, 3)
 model = model.to('cuda')
 optimizer = optim.AdamW(model.parameters())
 exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
@@ -130,5 +130,5 @@ criterion = nn.CrossEntropyLoss()
 model_ft = train_model(model, criterion, optimizer, exp_lr_scheduler,
                        num_epochs=20)
 
-PATH = './efficientnetb0_AdamW_64x64.pt'
+PATH = './efficientnetb3_AdamW_256x256.pt'
 torch.save(model_ft, PATH)
